@@ -1,0 +1,35 @@
+
+name: DevOps CI Pipeline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t devops-app:1.0 .
+
+      - name: Test webpage content
+        run: grep -q "Welcome to DevOps Automation!" index.html
+
+      - name: Test Docker image
+        run: docker run -d -p 8080:80 --name devops-container devops-app:1.0
+
+      - name: Verify application response
+        run: |
+          for i in {1..10}; do
+            if curl -fsS http://localhost:8080/; then
+              echo "Application test passed"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Application test failed"
+          exit 1
